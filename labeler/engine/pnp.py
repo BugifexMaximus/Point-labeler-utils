@@ -43,14 +43,32 @@ def initial_pnp(session) -> Tuple[np.ndarray, np.ndarray]:
     iters = int(session.params.get("ransac_iters", 1500))
 
     if len(ids) == 3:
-        success, rvec, tvec = cv2.solvePnP(
+        retval, rvecs, tvecs = cv2.solvePnPGeneric(
             objectPoints=pts3d,
             imagePoints=pts2d,
             cameraMatrix=session.config.K_cam,
             distCoeffs=session.config.dist,
             flags=cv2.SOLVEPNP_SQPNP,
-            useExtrinsicGuess=False,
-        )
+        )[:3]
+        if not retval or len(rvecs) == 0:
+            raise PnPError("solvePnPGeneric returned no hypotheses")
+
+        best = None
+        best_err = np.inf
+        for rvec, tvec in zip(rvecs, tvecs):
+            R_candidate, _ = cv2.Rodrigues(rvec)
+            depths = (R_candidate @ pts3d.T + tvec.reshape(3, 1))[2]
+            if np.any(depths <= 0):
+                continue
+            proj, _ = cv2.projectPoints(pts3d, rvec, tvec, session.config.K_cam, session.config.dist)
+            residual = np.linalg.norm(proj.reshape(-1, 2) - pts2d)
+            if residual < best_err:
+                best_err = residual
+                best = (rvec, tvec)
+        if best is None:
+            raise PnPError("No valid cheirality-consistent hypothesis from P3P")
+        rvec, tvec = best
+        success = True
     else:
         success, rvec, tvec, _ = cv2.solvePnPRansac(
             objectPoints=pts3d,

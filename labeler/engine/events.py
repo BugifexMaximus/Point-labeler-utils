@@ -147,3 +147,9 @@ def get_layers(session: ImageSession) -> Dict:
 
 def get_states(session: ImageSession) -> Dict[int, str]:
     return deepcopy(session.state)
+
+
+def refresh_pose_and_rigid(session: ImageSession) -> None:
+    """Public helper to recompute pose and rigid projections after loading annotations."""
+
+    _recompute_pose(session, force_initial=True)

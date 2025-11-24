@@ -36,12 +36,13 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "distortion_model": "brown_conrady",
         "clip_to_image": True,
     },
-    "render": {
-        "background": "procedural",
-        "keypoint_glyphs": "debug_small",
-        "occluders": {
-            "enable": True,
-            "count": [0, 4],
+        "render": {
+            "background": "procedural",
+            "keypoint_glyphs": "debug_small",
+            "keypoint_label_mode": "none",  # none | id | label | id_label
+            "occluders": {
+                "enable": True,
+                "count": [0, 4],
             "shape": "ellipse",
             "size_px": [20, 120],
             "hit_keypoint_prob": 0.3,

@@ -23,6 +23,7 @@ projection:
 render:
   background: gradient
   keypoint_glyphs: debug_small
+  keypoint_label_mode: id
   occluders:
     enable: false
     count: [0, 0]

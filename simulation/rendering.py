@@ -122,12 +122,18 @@ def apply_photometrics(img: np.ndarray, cfg: dict, rng: np.random.Generator) -> 
     return np.asarray(img_pil)
 
 
-def draw_debug_keypoints(img: np.ndarray, xy: np.ndarray, visible: np.ndarray) -> np.ndarray:
+def draw_debug_keypoints(
+    img: np.ndarray,
+    xy: np.ndarray,
+    visible: np.ndarray,
+    labels: Tuple[str, ...] | None = None,
+    label_mode: str = "none",
+) -> np.ndarray:
     """Overlay small glyphs so projections are visually apparent in renders."""
 
     img_pil = Image.fromarray(img)
     draw = ImageDraw.Draw(img_pil)
-    for pt, vis in zip(xy, visible):
+    for idx, (pt, vis) in enumerate(zip(xy, visible)):
         if not vis:
             continue
         x, y = pt
@@ -135,6 +141,19 @@ def draw_debug_keypoints(img: np.ndarray, xy: np.ndarray, visible: np.ndarray) -
         draw.ellipse([x - r, y - r, x + r, y + r], fill=(255, 80, 80))
         draw.line([x - r * 2, y, x + r * 2, y], fill=(255, 255, 255), width=1)
         draw.line([x, y - r * 2, x, y + r * 2], fill=(255, 255, 255), width=1)
+
+        if label_mode != "none" and labels is not None:
+            if label_mode == "id":
+                text = str(idx)
+            elif label_mode == "label":
+                text = str(labels[idx])
+            elif label_mode == "id_label":
+                text = f"{idx}:{labels[idx]}"
+            else:
+                text = None
+
+            if text:
+                draw.text((x + r + 2, y - r - 2), text, fill=(255, 255, 0))
     return np.asarray(img_pil)
 
 

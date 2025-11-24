@@ -155,7 +155,8 @@ def generate_dataset(config_path: str, out_dir: str) -> None:
         bg = render_background(cfg["render"], cfg["image_size"][1], cfg["image_size"][0], rng)
         img, occ_mask = apply_occluders(bg, cfg["render"]["occluders"], xy, rng)
         if cfg["render"].get("keypoint_glyphs", "hidden") == "debug_small":
-            img = draw_debug_keypoints(img, xy, visibility_mask)
+            label_mode = cfg["render"].get("keypoint_label_mode", "none")
+            img = draw_debug_keypoints(img, xy, visibility_mask, tuple(labels), label_mode)
 
         phot_cfg = cfg["render"].get("photometric", {})
         img = apply_photometrics(img, phot_cfg, rng)

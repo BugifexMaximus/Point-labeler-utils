@@ -38,7 +38,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     "render": {
         "background": "procedural",
-        "keypoint_glyphs": "hidden",
+        "keypoint_glyphs": "debug_small",
         "occluders": {
             "enable": True,
             "count": [0, 4],

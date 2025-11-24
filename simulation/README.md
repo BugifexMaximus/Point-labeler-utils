@@ -11,6 +11,7 @@ python -c "from simulation.dataset import generate_dataset; generate_dataset('si
 ```
 
 Outputs will be placed in `synth_dataset/project` following the prescribed layout (images, annotations, camera intrinsics, click scripts, and config snapshots).
+By default, small debug glyphs are rendered at each projected keypoint to make the object visible in the PNGs; set `render.keypoint_glyphs` to `hidden` if you prefer clean backgrounds.
 
 ### Quick verification
 

@@ -22,7 +22,7 @@ projection:
   clip_to_image: true
 render:
   background: gradient
-  keypoint_glyphs: hidden
+  keypoint_glyphs: debug_small
   occluders:
     enable: false
     count: [0, 0]

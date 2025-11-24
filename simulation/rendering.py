@@ -123,14 +123,18 @@ def apply_photometrics(img: np.ndarray, cfg: dict, rng: np.random.Generator) -> 
 
 
 def draw_debug_keypoints(img: np.ndarray, xy: np.ndarray, visible: np.ndarray) -> np.ndarray:
+    """Overlay small glyphs so projections are visually apparent in renders."""
+
     img_pil = Image.fromarray(img)
     draw = ImageDraw.Draw(img_pil)
     for pt, vis in zip(xy, visible):
         if not vis:
             continue
         x, y = pt
-        r = 2
-        draw.ellipse([x - r, y - r, x + r, y + r], fill=(255, 0, 0))
+        r = 3
+        draw.ellipse([x - r, y - r, x + r, y + r], fill=(255, 80, 80))
+        draw.line([x - r * 2, y, x + r * 2, y], fill=(255, 255, 255), width=1)
+        draw.line([x, y - r * 2, x, y + r * 2], fill=(255, 255, 255), width=1)
     return np.asarray(img_pil)
 
 

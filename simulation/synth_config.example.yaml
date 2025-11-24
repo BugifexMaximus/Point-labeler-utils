@@ -1,0 +1,46 @@
+seed: 7
+num_images: 10
+image_size: [640, 480]
+camera:
+  K: [800.0, 0.0, 320.0, 0.0, 800.0, 240.0, 0.0, 0.0, 1.0]
+  dist: []
+  vary_intrinsics: false
+object:
+  source: parametric
+  preset: kite_3D
+  scale: 1.0
+pose_sampling:
+  mode: look_at
+  target: [0, 0, 0]
+  radius_m: [1.0, 1.5]
+  az_deg: [-140, 140]
+  el_deg: [-20, 35]
+  roll_deg: [-8, 8]
+  min_view_separation_deg: 12
+projection:
+  distortion_model: none
+  clip_to_image: true
+render:
+  background: gradient
+  keypoint_glyphs: debug_small
+  keypoint_label_mode: id
+  occluders:
+    enable: false
+    count: [0, 0]
+    shape: ellipse
+    size_px: [0, 0]
+    hit_keypoint_prob: 0.0
+  photometric:
+    add_noise: true
+    noise_sigma_px: 0.5
+    blur_kernel_odd: 0
+    motion_blur_px: 0
+    brightness_jitter: 0.05
+    contrast_jitter: 0.05
+click_sim:
+  enable: true
+  click_noise_sigma_px: 0.8
+  bootstrap_anchors: 3
+  extra_clicks: 3
+  snap_radius_px: 12.0
+  misclick_rate: 0.0

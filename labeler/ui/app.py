@@ -155,7 +155,9 @@ class Anchor3DPane:
         return np.stack([x, y], axis=1)
 
     def _on_mouse(self, event):
-        if event.type == gui.MouseEvent.Type.BUTTON_DOWN and event.is_left_button:
+        if event.type == gui.MouseEvent.Type.BUTTON_DOWN and event.is_button_down(
+            gui.MouseButton.LEFT
+        ):
             screen_pts = self._project_to_screen()
             if screen_pts is None:
                 return gui.Widget.EventCallbackResult.IGNORED

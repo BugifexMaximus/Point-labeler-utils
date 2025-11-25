@@ -2,18 +2,88 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 import cv2
 import numpy as np
-import open3d.visualization.gui as gui
-import open3d.visualization.rendering as rendering
+try:
+    import open3d.visualization.gui as gui
+    import open3d.visualization.rendering as rendering
+except ImportError as exc:  # pragma: no cover - exercised only when Open3D missing
+    gui = None
+    rendering = None
+    _OPEN3D_IMPORT_ERROR = exc
 
 from ..engine import events
 from ..engine.io import load_annotations, load_project, save_annotations
 from ..engine.session import STATE_EXPLICIT, STATE_OCCLUDED, STATE_RIGID, ImageSession, start_session
 from .overlays import render_overlay
+
+
+_GUI_INITIALIZED = False
+DEFAULT_PROJECT_ENV = "LABELER_DEFAULT_PROJECT"
+SIM_DEFAULT_PROJECT = (
+    Path(__file__).resolve().parents[2]
+    / "simulation"
+    / "synth_dataset"
+    / "project"
+)
+
+
+def _ensure_gui_initialized() -> gui.Application:
+    """Initialize the Open3D GUI singleton exactly once."""
+
+    global _GUI_INITIALIZED
+    if gui is None:
+        raise ImportError(
+            "Open3D is required for the 3D anchor pane; install open3d to enable the UI"
+        ) from _OPEN3D_IMPORT_ERROR
+    app = gui.Application.instance
+    if not _GUI_INITIALIZED:
+        app.initialize()
+        _GUI_INITIALIZED = True
+    return app
+
+
+def resolve_default_paths(
+    project_arg: Optional[str], image_arg: Optional[str]
+) -> Tuple[Path, Path]:
+    """Resolve project/image paths with simulation-friendly defaults.
+
+    - If `project_arg` is provided, it wins.
+    - Else, use `$LABELER_DEFAULT_PROJECT` if set; otherwise default to
+      `simulation/synth_dataset/project` (the output location of the bundled
+      simulation pipeline).
+    - For the image, use the provided argument when present; otherwise pick the
+      first PNG/JPG under `<project>/images`.
+    """
+
+    if project_arg:
+        project = Path(project_arg)
+    else:
+        project = Path(os.environ.get(DEFAULT_PROJECT_ENV, SIM_DEFAULT_PROJECT))
+
+    if not project.exists():
+        raise FileNotFoundError(
+            f"Project directory {project} not found. Generate one via the simulation "
+            "pipeline (simulation/dataset.py) or point the labeler at an existing project."
+        )
+
+    if image_arg:
+        image = Path(image_arg)
+    else:
+        images_dir = project / "images"
+        candidates = sorted(images_dir.glob("*.png")) or sorted(images_dir.glob("*.jpg"))
+        if not candidates:
+            raise FileNotFoundError(
+                f"No PNG/JPG images found under {images_dir}. Provide --image explicitly or "
+                "generate a simulation run with images."
+            )
+        image = candidates[0]
+
+    return project, image
 
 
 class Anchor3DPane:
@@ -24,9 +94,7 @@ class Anchor3DPane:
         self.on_select = on_select
         self.window_title = window_title
 
-        self.app = gui.Application.instance
-        if not self.app.is_running():
-            self.app.initialize()
+        self.app = _ensure_gui_initialized()
 
         self.window = self.app.create_window(self.window_title, 640, 480)
         self.widget = gui.SceneWidget()
@@ -215,12 +283,26 @@ def launch_from_cli(args: Optional[list[str]] = None) -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="OpenCV/Open3D labeler prototype")
-    parser.add_argument("project", help="Project directory or camera.yaml path")
-    parser.add_argument("image", help="Image to annotate")
+    parser.add_argument(
+        "project",
+        nargs="?",
+        default=None,
+        help=(
+            "Project directory; defaults to the simulation output folder if the "
+            f"${DEFAULT_PROJECT_ENV} environment variable is set or to {SIM_DEFAULT_PROJECT}"
+        ),
+    )
+    parser.add_argument(
+        "image",
+        nargs="?",
+        default=None,
+        help="Image to annotate; defaults to the first PNG/JPG under <project>/images",
+    )
     parser.add_argument("--annotations", help="Optional annotations JSON path to load/save")
     parsed = parser.parse_args(args)
 
-    ui = LabelerUI(parsed.project, parsed.image, parsed.annotations)
+    project_path, image_path = resolve_default_paths(parsed.project, parsed.image)
+    ui = LabelerUI(str(project_path), str(image_path), parsed.annotations)
     ui.run()
 
 

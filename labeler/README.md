@@ -20,6 +20,11 @@ The `labeler.ui` package wires the headless engine into a minimal desktop UI bui
 python -m labeler.ui.app /path/to/project /path/to/image.jpg --annotations /tmp/out.json
 ```
 
+If you omit the positional arguments, the CLI will try to launch against the
+latest simulation output (defaulting to `simulation/synth_dataset/project` or
+`$LABELER_DEFAULT_PROJECT` when set) and pick the first PNG/JPG under
+`<project>/images` for quick smoke testing.
+
 Hotkeys:
 - Click the 3D pane to set the active anchor (red highlight).
 - Left-click the 2D pane to place/adjust EXPLICIT observations per the engine workflow.

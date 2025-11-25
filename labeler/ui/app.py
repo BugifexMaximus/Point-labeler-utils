@@ -148,10 +148,26 @@ class Anchor3DPane:
         proj = np.asarray(cam.get_projection_matrix(), dtype=np.float64).reshape(4, 4).T
         pts_h = np.concatenate([self._points, np.ones((len(self._points), 1))], axis=1)
         clip = (proj @ view @ pts_h.T).T
-        clip[:, :3] /= clip[:, 3:4]
-        # normalized device coords -> pixels
-        x = (clip[:, 0] * 0.5 + 0.5) * float(self.widget.frame.width)
-        y = (1.0 - (clip[:, 1] * 0.5 + 0.5)) * float(self.widget.frame.height)
+        w = clip[:, 3:4]
+        finite = np.abs(w) > 1e-8
+        clip[:, :3] = np.divide(
+            clip[:, :3],
+            w,
+            out=np.full_like(clip[:, :3], np.nan),
+            where=finite,
+        )
+        # normalized device coords -> pixels; points without valid clip-space w
+        # become inf so they are ignored by the picker.
+        x = np.where(
+            np.isfinite(clip[:, 0]),
+            (clip[:, 0] * 0.5 + 0.5) * float(self.widget.frame.width),
+            np.inf,
+        )
+        y = np.where(
+            np.isfinite(clip[:, 1]),
+            (1.0 - (clip[:, 1] * 0.5 + 0.5)) * float(self.widget.frame.height),
+            np.inf,
+        )
         return np.stack([x, y], axis=1)
 
     def _on_mouse(self, event):
